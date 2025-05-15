@@ -1,0 +1,23 @@
+- hosts:
+    - test1
+    - test2
+    - test3
+  gather_facts: false 
+  tasks:    
+    - set_fact:
+        mail_to_hosts: "{{ mail_to_hosts | default({}) | combine({ item: (mail_to_hosts[item] | default([])) + [inventory_hostname] }) }}"
+      loop: "{{ mails }}"
+      when: mails is defined
+    - name: Save summary facts under Ansible controller
+      delegate_to: localhost
+      delegate_facts: True
+      run_once: yes
+      set_fact:
+        combined_mail_to_hosts: >-
+          {{
+            hostvars | dict2items
+            | map(attribute='value.mail_to_hosts')
+            | select('defined')
+          }}
+      
+   
